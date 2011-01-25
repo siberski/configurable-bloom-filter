@@ -37,35 +37,18 @@ public class BloomFilterMaker<E> {
 	// number of hashes for the created filter
 	int hashCount = -1;
 
-	// desired false positive probability
-	double fpp = -1.0;
-
-	// maximum number of elements for which the false positive probability
-	// should hold
-	int maxElements = -1;
-
 	// the hasher to be used in the created filter
 	Hasher.Maker hasherMaker = null;
 
 	/**
 	 * Builds a new filter with the specified characteristics. This method does
-	 * not alter the state of this {@code MapMaker} instance, so it can be
+	 * not alter the state of this {@code BloomFilterMaker} instance, so it can be
 	 * invoked again to create multiple independent maps.
 	 * 
 	 * @return a Bloom filter with the specified characteristics
 	 */
 	public BloomFilter<E> makeFilter() {
-		// characteristics can be either specified
-		// explicitly via length and Hasher.Maker.hashCount
-		// implicitly fpp and maxElements
-		boolean explicitlyDefined = (length > 0 && hashCount > 0);
-		boolean implicitlyDefined = (fpp > 0.0 && maxElements > 0);
-		assert (explicitlyDefined || implicitlyDefined)
-				&& !(explicitlyDefined && implicitlyDefined);
-
-		if (implicitlyDefined) {
-			computeLengthAndHashCount();
-		}
+		assert length > 0 && hashCount > 0;
 
 		if (hasherMaker == null) {
 			hasherMaker = new WangJenkinsHasher.Maker();
@@ -86,10 +69,6 @@ public class BloomFilterMaker<E> {
 			throw new IllegalStateException("length already set to "
 					+ this.length);
 		}
-		if (this.fpp != -1.0) {
-			throw new IllegalStateException(
-					"specifying false positive probability and length is not allowed");
-		}
 		this.length = length;
 		return this;
 	}
@@ -106,16 +85,12 @@ public class BloomFilterMaker<E> {
 			throw new IllegalStateException("hashCount already set to "
 					+ this.hashCount);
 		}
-		if (this.fpp != -1.0) {
-			throw new IllegalStateException(
-					"specifying false positive probability and hashCount is not allowed");
-		}
 		this.hashCount = hashCount;
 		return this;
 	}
 
 	/**
-	 * Specifies the hashing algorithm for the BloomFilter. Default is the
+	 * Specifies the hashing algorithm for the BloomFilter. Default is 
 	 * Wang-Jenkins hashing.
 	 */
 	public BloomFilterMaker<E> hasher(Hasher.Maker hasherMaker) {
@@ -148,26 +123,15 @@ public class BloomFilterMaker<E> {
 			throw new IllegalArgumentException(
 					"maxElements must be larger than 0");
 		}
-		if (this.fpp != -1.0) {
-			throw new IllegalStateException(
-					"false positive probability already set to " + this.fpp);
-		}
 		if (this.length != -1.0) {
-			throw new IllegalStateException(
-					"specifying length and false positive probability is not allowed");
+			throw new IllegalStateException("length already set to "
+					+ this.length);
 		}
 		if (this.hashCount != -1.0) {
-			throw new IllegalStateException(
-					"specifying hashCount and false positive probability is not allowed");
+			throw new IllegalStateException("hashCount already set to "
+					+ this.hashCount);
 		}
 
-		this.fpp = fpp;
-		this.maxElements = maxElements;
-
-		return this;
-	}
-
-	private void computeLengthAndHashCount() {
 		// determine optimal length
 		int optLength = (int) ceil(abs(maxElements * log(fpp) / pow(log(2), 2)));
 		int offset = Long.SIZE - (optLength % Long.SIZE);
@@ -177,6 +141,7 @@ public class BloomFilterMaker<E> {
 		// determine optimal number of hash functions
 		int optHashCount = max(1, (int) ceil((length / maxElements) * log(2)));
 		hashCount = optHashCount;
-	}
 
+		return this;
+	}
 }
