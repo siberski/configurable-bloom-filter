@@ -19,18 +19,20 @@ package de.siberski.bf;
 import java.util.BitSet;
 
 /**
- * This hasher uses a Mersenne Twister as pseudo-random
- * number generator. 
- *
+ * This hasher uses a Mersenne Twister as pseudo-random number generator.
+ * 
  */
 public class MersenneHasher extends Hasher {
-	 
-	public MersenneHasher(int hashCount) {
-		super(hashCount);
+	public static class Maker extends Hasher.Maker {
+		@Override
+		public Hasher makeHasher() {
+			assert hashCount > 0;
+			return new MersenneHasher(this);
+		}
 	}
-	
-	public MersenneHasher() {
-		super();
+
+	public MersenneHasher(MersenneHasher.Maker maker) {
+		super(maker);
 	}
 
 	@Override
@@ -38,27 +40,27 @@ public class MersenneHasher extends Hasher {
 		int additionalTrueBits = 0;
 		// we need to create a new MersenneTwister to
 		// ensure thread-safety
-		MersenneTwisterFast mt = new MersenneTwisterFast(key); 
+		MersenneTwisterFast mt = new MersenneTwisterFast(key);
 		int upperBound = bits.size();
 		for (int i = 0; i < getHashCount(); i++) {
 			int hash = mt.nextInt(upperBound);
-			if(!bits.get(hash)){
+			if (!bits.get(hash)) {
 				additionalTrueBits++;
 				bits.set(hash);
 			}
 		}
 		return additionalTrueBits;
 	}
-	
+
 	@Override
 	public boolean testKey(int key, BitSet bits) {
 		// we need to create a new MersenneTwister to
 		// ensure thread-safety
-		MersenneTwisterFast mt = new MersenneTwisterFast(key); 
+		MersenneTwisterFast mt = new MersenneTwisterFast(key);
 		int upperBound = bits.size();
 		for (int i = 0; i < getHashCount(); i++) {
 			int hash = mt.nextInt(upperBound);
-			if(!bits.get(hash)){
+			if (!bits.get(hash)) {
 				return false;
 			}
 		}

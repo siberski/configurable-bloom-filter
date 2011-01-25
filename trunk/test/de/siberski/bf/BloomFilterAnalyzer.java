@@ -36,17 +36,23 @@ public class BloomFilterAnalyzer {
 		final double desiredFpp = 0.5; // the false positive probability upper
 										// bound
 
-		testFilter(count, max, step, desiredFpp, new JavaRandomHasher());
-		testFilter(count, max, step, desiredFpp, new WangJenkinsHasher());
-		testFilter(count, max, step, desiredFpp, new MersenneHasher());
+		testFilter(count, max, step, desiredFpp, new JavaRandomHasher.Maker(),
+				"Java Random");
+		testFilter(count, max, step, desiredFpp, new WangJenkinsHasher.Maker(),
+				"Wang/Jenkins");
+		testFilter(count, max, step, desiredFpp, new MersenneHasher.Maker(),
+				"Mersenne Twister");
 	}
 
 	private static void testFilter(final int count, final int max,
-			final int step, double desiredFpp, final Hasher hasher) {
+			final int step, double desiredFpp, final Hasher.Maker hasherMaker,
+			final String hashAlgoName) {
 		BloomFilterMaker<Integer> maker = new BloomFilterMaker<Integer>()
-		.desiredFalsePositiveProbability(desiredFpp, max).hasher(hasher);
+				.desiredFalsePositiveProbability(desiredFpp, max).hasher(
+						hasherMaker);
 		final BloomFilter<Integer> bf = maker.makeFilter();
-		
+
+		System.out.println("Starting tests for " + hashAlgoName + " hasher");
 		final long startTime = System.currentTimeMillis();
 		for (int i = 0; i < max; i += step) {
 			// clear ready for this run
@@ -63,26 +69,23 @@ public class BloomFilterAnalyzer {
 					fpCount++;
 				}
 			}
-			// calculate the false positive prob.
-			// double fpp = (double)fpCount / (count-i);
-			// display result
-			// System.out.println( String.format("%d\t%1.6f", i, fpp) );
+
 			int expected = expectedTrueBits(bf, i);
 			int observed = bf.getBits().cardinality();
 			int length = bf.getLength();
 			double deviation;
-			if(observed == 0 && expected == 0 ){
+			if (observed == 0 && expected == 0) {
 				deviation = 0.0;
 			} else {
 				deviation = (double) (observed - expected) / expected * 100;
 			}
 
 			System.out.println("Length: " + length + ", expected: " + expected
-					+ " , observed: " + observed + ", deviation: "
-					+ deviation + "%");
+					+ " , observed: " + observed + ", deviation: " + deviation
+					+ "%");
 		}
 		final long finishTime = System.currentTimeMillis();
-		System.out.println("(Time taken " + (finishTime - startTime) + "ms)");
+		System.out.println("(Time taken " + (finishTime - startTime) + "ms)\n");
 	}
 
 	private static int invertBits(int j) {

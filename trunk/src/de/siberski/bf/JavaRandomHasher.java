@@ -20,43 +20,45 @@ import java.util.BitSet;
 import java.util.Random;
 
 /**
- * This hasher uses java.Random as pseudo-random
- * number generator. 
+ * This hasher uses java.Random as pseudo-random number generator.
  */
 public class JavaRandomHasher extends Hasher {
-	 
-	public JavaRandomHasher(int hashCount) {
-		super(hashCount);
+	public static class Maker extends Hasher.Maker {
+		@Override
+		public Hasher makeHasher() {
+			assert hashCount > 0;
+			return new JavaRandomHasher(this);
+		}
 	}
-	
-	public JavaRandomHasher() {
-		super();
+
+	public JavaRandomHasher(JavaRandomHasher.Maker maker) {
+		super(maker);
 	}
 
 	@Override
 	public int addKey(int key, BitSet bits) {
 		int additionalTrueBits = 0;
 		// create a new Random to ensure thread-safety
-		Random mt = new Random(key); 
+		Random mt = new Random(key);
 		int upperBound = bits.size();
 		for (int i = 0; i < getHashCount(); i++) {
 			int hash = mt.nextInt(upperBound);
-			if(!bits.get(hash)){
+			if (!bits.get(hash)) {
 				additionalTrueBits++;
 				bits.set(hash);
 			}
 		}
 		return additionalTrueBits;
 	}
-	
+
 	@Override
 	public boolean testKey(int key, BitSet bits) {
 		// create a new Random to ensure thread-safety
-		MersenneTwisterFast mt = new MersenneTwisterFast(key); 
+		MersenneTwisterFast mt = new MersenneTwisterFast(key);
 		int upperBound = bits.size();
 		for (int i = 0; i < getHashCount(); i++) {
 			int hash = mt.nextInt(upperBound);
-			if(!bits.get(hash)){
+			if (!bits.get(hash)) {
 				return false;
 			}
 		}

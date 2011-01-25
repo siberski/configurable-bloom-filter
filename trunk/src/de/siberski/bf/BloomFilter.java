@@ -2,7 +2,7 @@
  * Copyright (C) 2010 Wolf Siberski
  * 
  * API and Javadoc partly copied from the proposal by Kevin Bourrillion at
- * http://code.google.com/p/guava-libraries/issues/detail?id=12 * 
+ * http://code.google.com/p/guava-libraries/issues/detail?id=12  
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ package de.siberski.bf;
 import java.io.Serializable;
 import java.util.BitSet;
 
-
 /**
  * A probabilistic "shadow" of a set of elements, useful when the set itself
  * would be too expensive to maintain in memory and query directly. A Bloom
@@ -34,21 +33,23 @@ import java.util.BitSet;
 public class BloomFilter<E> implements Serializable {
 	// Serializable version number
 	private static final long serialVersionUID = 1L;
-	
+
 	// Hashing algorithm of this filter
 	protected Hasher hasher;
-	
+
 	// Current number of true bits
 	protected int trueBitCount;
-	
+
 	// Bit array representing the added elements
 	protected BitSet bits;
 
-	
 	/**
 	 * Creates a new BloomFilter
-	 * @param hasher the hashing algorithm
-	 * @param length the length of this filter's bit array
+	 * 
+	 * @param hasher
+	 *            the hashing algorithm
+	 * @param length
+	 *            the length of this filter's bit array
 	 */
 	protected BloomFilter(Hasher hasher, int length) {
 		this.hasher = hasher;
@@ -65,15 +66,13 @@ public class BloomFilter<E> implements Serializable {
 	 * {@link #getFalsePositiveProbability()}.
 	 */
 	public boolean mightContain(E element) {
-		int key = 0; 
-		if(element != null) {
+		int key = 0;
+		if (element != null) {
 			key = element.hashCode();
 		}
-		
+
 		return hasher.testKey(key, bits);
 	}
-
-
 
 	/**
 	 * Adds {@code newElement} to this Bloom filter, so that
@@ -84,18 +83,17 @@ public class BloomFilter<E> implements Serializable {
 	 */
 	public boolean add(E newElement) {
 		// compute object key
-		int key = 0; 
-		if(newElement != null) {
+		int key = 0;
+		if (newElement != null) {
 			key = newElement.hashCode();
 		}
-		
+
 		// set bits according to hashes
 		int additionalTrueBits = hasher.addKey(key, bits);
-	
+
 		trueBitCount += additionalTrueBits;
 		return additionalTrueBits > 0;
 	}
-
 
 	/**
 	 * Adds all elements to this Bloom filter.
@@ -106,7 +104,7 @@ public class BloomFilter<E> implements Serializable {
 	 */
 	public boolean addAll(Iterable<? extends E> elements) {
 		boolean bfChanged = false;
-		for(E element : elements){
+		for (E element : elements) {
 			bfChanged = add(element) || bfChanged;
 		}
 		return bfChanged;
@@ -118,13 +116,14 @@ public class BloomFilter<E> implements Serializable {
 	 * additional false positives. Only filters with identical length and
 	 * hashCount can be combined.
 	 * 
-	 * @param filter Bloom filter of the elements to be added.
+	 * @param filter
+	 *            Bloom filter of the elements to be added.
 	 */
 	public void addAll(BloomFilter<E> filter) {
-		assert this.getLength() == filter.getLength() && this.hasher.equals(filter.hasher);
+		assert this.getLength() == filter.getLength()
+				&& this.hasher.equals(filter.hasher);
 		bits.or(filter.getBits());
 	}
-
 
 	/**
 	 * Retains only the elements in this set that are contained in the specified
@@ -132,16 +131,18 @@ public class BloomFilter<E> implements Serializable {
 	 * filters, plus possibly false positives. Only filters with identical
 	 * length and hashCount can be combined.
 	 * 
-	 * @param filter Bloom filter of the elements to be retained
+	 * @param filter
+	 *            Bloom filter of the elements to be retained
 	 */
 	public void retainAll(BloomFilter<E> filter) {
-		assert this.getLength() == filter.getLength() && this.hasher.equals(filter.hasher);
+		assert this.getLength() == filter.getLength()
+				&& this.hasher.equals(filter.hasher);
 		bits.and(filter.getBits());
 	}
 
 	/**
 	 * Returns the number of hashes used in this Bloom filter
-	 *  
+	 * 
 	 * @return number of hashes
 	 */
 	public int getHashCount() {
@@ -149,32 +150,33 @@ public class BloomFilter<E> implements Serializable {
 	}
 
 	/**
-	 * returns the length of the Bloom filter, i.e., the number of bits
-	 * used to represent the set
-	 *  
+	 * returns the length of the Bloom filter, i.e., the number of bits used to
+	 * represent the set
+	 * 
 	 * @return length in bits
 	 */
 	public int getLength() {
 		return bits.size();
 	}
 
-	
-
 	/**
-	 * returns the false positive probability for this Bloom filter, 
-	 * given the number of elements already added to the filter.
+	 * returns the false positive probability for this Bloom filter, given the
+	 * number of elements already added to the filter.
 	 * 
-	 * @param numberOfElements the number of elements already added to the filter. 
+	 * @param numberOfElements
+	 *            the number of elements already added to the filter.
 	 */
 	private double getFalsePositiveProbability(int numberOfElements) {
-		return Math.pow(1d - Math.pow(1 - 1d / getLength(), getHashCount() * numberOfElements), getHashCount());
+		return Math.pow(
+				1d - Math.pow(1 - 1d / getLength(), getHashCount()
+						* numberOfElements), getHashCount());
 	}
 
 	/**
 	 * Returns the probability that {@link #mightContain} will return
-	 * {@code true} for an element not actually contained in this set.
-	 * Uses the estimated number of distinct elements added to
-	 * compute the false positive probability.
+	 * {@code true} for an element not actually contained in this set. Uses the
+	 * estimated number of distinct elements added to compute the false positive
+	 * probability.
 	 */
 	public double getFalsePositiveProbability() {
 		return getFalsePositiveProbability(estimatedSize());
@@ -187,23 +189,28 @@ public class BloomFilter<E> implements Serializable {
 		final double m = getLength();
 		final double i = trueBitCount;
 		final double k = getHashCount();
-		// cast to int is safe here because not more than Integer.MAX_VALUE / hashCount
-		// elements can be in a filter
-		return (int)Math.round(Math.log(1d - i / m) / (k * Math.log(1d - 1d / m)));
+		// cast to int is safe here because Integer.MAX_VALUE / hashCount is the
+		// upper bound for the estimated number of elements
+		if (i == m) {
+			return (int) (m / k);
+		} else {
+			return (int) Math.round(
+					Math.log(1.0d - i / m) / (k * Math.log(1.0d - 1.0d / m)));
+		}
 	}
 
-    /**
-     * Returns {@code true} if this filter contains no elements.
-     *
-     */
+	/**
+	 * Returns {@code true} if this filter contains no elements.
+	 * 
+	 */
 	public boolean isEmpty() {
 		return trueBitCount == 0;
 	}
 
-    /**
-     * Removes all elements from this filter.
-     *
-     */
+	/**
+	 * Removes all elements from this filter.
+	 * 
+	 */
 	public void clear() {
 		bits.clear();
 		trueBitCount = 0;
@@ -222,12 +229,13 @@ public class BloomFilter<E> implements Serializable {
 			return false;
 		}
 		if (this == other) {
-		    return true;
+			return true;
 		}
-		
+
 		@SuppressWarnings("rawtypes")
 		BloomFilter otherFilter = (BloomFilter) other;
-		return this.hasher.equals(otherFilter.hasher) && this.bits.equals(otherFilter.getBits());	
+		return this.hasher.equals(otherFilter.hasher)
+				&& this.bits.equals(otherFilter.getBits());
 	}
 
 	@Override

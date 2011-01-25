@@ -18,55 +18,62 @@ package de.siberski.bf;
 
 import java.util.BitSet;
 
-
 /**
- * This class encapsulates the hashing algorithm used to compute
- * the hash values of a key to be added to a Bloom filter. 
- *
+ * This class encapsulates the hashing algorithm used to compute the hash values
+ * of a key to be added to a Bloom filter.
+ * 
  */
 
-public abstract class Hasher implements Cloneable {
+public abstract class Hasher {
+	public abstract static class Maker {
+		int hashCount = -1;
+
+		public abstract Hasher makeHasher();
+
+		public Hasher.Maker hashCount(int hashCount) {
+			this.hashCount = hashCount;
+			return this;
+		}
+	}
+
 	// number of bits to be set for each element
 	private int hashCount = -1;
 
 	/**
-	 * creates a new hasher 
+	 * creates a new hasher
 	 * 
-	 * @param hashCount number of hash functions, i.e., number of bits set
-	 * 					per element
+	 * @param hashCount
+	 *            number of hash functions, i.e., number of bits set per element
 	 */
-	public Hasher(int hashCount) {
-		setHashCount(hashCount);
+	public Hasher(Maker maker) {
+		setHashCount(maker.hashCount);
 	}
-	
-	/**
-	 * creates a new hasher with undefined hashCount
-	 */
-	public Hasher() {
-	}
-	
-	
+
 	/**
 	 * hashes the key into the bit set.
 	 * 
-	 * Note to implementers: this method needs to be thread safe. 
+	 * Note to implementers: this method needs to be thread safe.
 	 * 
-	 * @param key key to be inserted
-	 * @param bits bit set
+	 * @param key
+	 *            key to be inserted
+	 * @param bits
+	 *            bit set
 	 * @return number of bits who were set to true as result of this operation
 	 */
 	public abstract int addKey(int key, BitSet bits);
 
 	/**
-	 * checks if the key is in the bit set. As usual for Bloom
-	 * filters, this check can be false positive.
+	 * checks if the key is in the bit set. As usual for Bloom filters, this
+	 * check can be false positive.
 	 * 
-	 * Note to implementers: this method needs to be thread safe. 
-
-	 * @param key key to be checked
-	 * @param bits bit set
-	 * @return {@code true} if all bit positions for this key are set, 
-	 * 		   {@code false} otherwise
+	 * Note to implementers: this method needs to be thread safe.
+	 * 
+	 * @param key
+	 *            key to be checked
+	 * @param bits
+	 *            bit set
+	 * @return {@code true} if all bit positions for this key are set,
+	 *         {@code false} otherwise
 	 */
 	public abstract boolean testKey(int key, BitSet bits);
 
@@ -81,43 +88,34 @@ public abstract class Hasher implements Cloneable {
 	 * sets the number of hash functions
 	 */
 	protected void setHashCount(int hashCount) {
-		if(hashCount < 1){
-			throw new IllegalArgumentException("hashCount must be larger than 0");
-		}		
+		if (hashCount < 1) {
+			throw new IllegalArgumentException(
+					"hashCount must be larger than 0");
+		}
 		if (this.hashCount != -1) {
-			throw new IllegalStateException("hashCount already set to " + this.hashCount);
+			throw new IllegalStateException("hashCount already set to "
+					+ this.hashCount);
 		}
 
 		this.hashCount = hashCount;
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof Hasher))
-		    return false;
+			return false;
 		if (this == other)
-		    return true;
-		Hasher otherHasher = (Hasher)other;
-		return getClass() == other.getClass() && hashCount == otherHasher.hashCount; 
+			return true;
+		Hasher otherHasher = (Hasher) other;
+		return getClass() == other.getClass()
+				&& hashCount == otherHasher.hashCount;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return hashCount;
 	}
-	
-	@Override
-	protected Hasher clone() {
-		Hasher clone;
-		try {
-			clone = getClass().newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} 
-		clone.setHashCount(this.hashCount);
-		return clone;
-	}
-	
+
 	@Override
 	public String toString() {
 		return getClass().getName() + "[" + hashCount + "]";
