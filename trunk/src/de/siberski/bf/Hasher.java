@@ -25,9 +25,19 @@ import java.util.BitSet;
  */
 
 public abstract class Hasher {
+	/**
+	 * Builder base class for Hasher objects. A Hasher can only
+	 * be created using {@code Maker#makeHasher()}. 
+	 */
 	public abstract static class Maker {
+		// number of of bits to be set for each element by the hasher
 		int hashCount = -1;
 
+		/**
+		 * builds a new Hasher instance
+		 * 
+		 * @return new Hasher object  
+		 */
 		public abstract Hasher makeHasher();
 
 		public Hasher.Maker hashCount(int hashCount) {

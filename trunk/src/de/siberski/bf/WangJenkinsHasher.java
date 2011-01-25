@@ -22,8 +22,8 @@ import java.util.BitSet;
 
 /**
  * This hasher uses a variant of Wang-Jenkins hashing
- * as pseudo-random number generator. 
- * (copied from Doug Leas java.util.concurrent.HashMap). 
+ * as pseudo-random number generator (copied from Doug Leas 
+ * java.util.concurrent.HashMap implementation). 
  * Double hashing copied from Benjamin Manes' BloomFilter
  * class at http://code.google.com/p/concurrentlinkedhashmap/wiki/BloomFilter 
  *
