@@ -24,16 +24,21 @@ import java.util.BitSet;
  * This hasher uses a variant of Wang-Jenkins hashing
  * as pseudo-random number generator. 
  * (copied from Doug Leas java.util.concurrent.HashMap). 
+ * Double hashing copied from Benjamin Manes' BloomFilter
+ * class at http://code.google.com/p/concurrentlinkedhashmap/wiki/BloomFilter 
  *
  */
 public class WangJenkinsHasher extends Hasher {
-
-	public WangJenkinsHasher(int hashCount) {
-		super(hashCount);
+	public static class Maker extends Hasher.Maker {
+		@Override
+		public Hasher makeHasher() {
+			assert hashCount > 0;
+			return new WangJenkinsHasher(this);
+		}
 	}
 
-	public WangJenkinsHasher() {
-		super();
+	public WangJenkinsHasher(WangJenkinsHasher.Maker maker) {
+		super(maker);
 	}
 
 	@Override
